@@ -125,13 +125,13 @@ private fun PortKnockTheme(content: @Composable () -> Unit) {
 @Composable
 private fun Panel(content: @Composable ColumnScope.() -> Unit) {
     Card(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = PanelBg),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content
         )
     }
@@ -183,20 +183,21 @@ fun App() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // header
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("🚪", fontSize = 26.sp)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("🚪", fontSize = 34.sp)
             Column {
-                Text("Port Knock", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("Port Knock", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text("ناک کن تا در باز شود", fontSize = 12.sp, color = Muted)
             }
         }
 
         // destination
         Panel {
+            SectionTitle("مقصد")
             OutlinedTextField(
                 value = host,
                 onValueChange = { host = it.trim() },
@@ -214,8 +215,8 @@ fun App() {
         Panel {
             SectionTitle("ناک‌ها")
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 knocks.forEachIndexed { i, k ->
                     val state = when {
@@ -241,6 +242,12 @@ fun App() {
 
             if (knocks.isEmpty()) {
                 Text("هنوز ناکی نداری؛ با + اضافه کن.", fontSize = 12.sp, color = Muted)
+            } else {
+                Text(
+                    "به ترتیب شماره اجرا می‌شوند. روی هر دایره بزن تا ویرایش شود.",
+                    fontSize = 12.sp,
+                    color = Muted
+                )
             }
 
             AnimatedVisibility(
@@ -277,6 +284,7 @@ fun App() {
 
         // test settings
         Panel {
+            SectionTitle("تنظیمات بررسی")
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = verify,
@@ -311,11 +319,11 @@ fun App() {
                 step = step,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(220.dp)
             )
             Text(
                 status,
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -345,10 +353,10 @@ fun App() {
                 }
             },
             enabled = !running,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(18.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .height(56.dp)
         ) {
             Text(
                 if (running) "در حال ناک…" else "ناک کن و نتیجه را بررسی کن",
@@ -392,7 +400,7 @@ private fun KnockCircle(
     )
     Box(
         modifier = Modifier
-            .size(56.dp)
+            .size(68.dp)
             .scale(scale)
             .background(fill, CircleShape)
             .border(if (selected) 3.dp else 1.5.dp, borderColor, CircleShape)
@@ -401,10 +409,10 @@ private fun KnockCircle(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("${index + 1}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text("${index + 1}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text(
                 k.label(),
-                fontSize = 9.sp,
+                fontSize = 10.sp,
                 color = Muted,
                 maxLines = 1,
                 overflow = TextOverflow.Clip
@@ -417,13 +425,13 @@ private fun KnockCircle(
 private fun AddCircle(enabled: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(56.dp)
+            .size(68.dp)
             .border(1.5.dp, Accent, CircleShape)
             .clip(CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text("+", fontSize = 28.sp, color = Accent)
+        Text("+", fontSize = 32.sp, color = Accent)
     }
 }
 
@@ -443,7 +451,7 @@ private fun KnockEditor(
         colors = CardDefaults.cardColors(containerColor = InnerBg),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("ناک ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
                 TextButton(onClick = onMinimize) { Text("—", fontSize = 22.sp, color = Muted) }
