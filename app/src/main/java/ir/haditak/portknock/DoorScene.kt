@@ -18,12 +18,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import kotlin.math.cos
 
@@ -143,22 +146,39 @@ private fun DrawScope.drawThief(left: Float, top: Float, dw: Float, dh: Float, a
     val headY = top + dh * 0.36f
     val body = Color(0xFF15151A).copy(alpha = a)
 
-    // body
+    // body with yellow stripes
+    val stripe = Color(0xFFFFC107).copy(alpha = a)
+    val bodyLeft = cx - r * 1.3f
+    val bodyTop = headY + r * 1.1f
+    val bodyW = r * 2.6f
+    val bodyH = dh * 0.4f
     drawRoundRect(
         color = body,
-        topLeft = Offset(cx - r * 1.3f, headY + r * 1.1f),
-        size = Size(r * 2.6f, dh * 0.4f),
+        topLeft = Offset(bodyLeft, bodyTop),
+        size = Size(bodyW, bodyH),
         cornerRadius = CornerRadius(r * 0.8f)
     )
-    // arms up
-    drawLine(
-        body, Offset(cx - r * 1.2f, headY + r * 1.8f), Offset(cx - r * 2.4f, headY - r * 0.9f),
-        strokeWidth = r * 0.55f, cap = StrokeCap.Round
-    )
-    drawLine(
-        body, Offset(cx + r * 1.2f, headY + r * 1.8f), Offset(cx + r * 2.4f, headY - r * 0.9f),
-        strokeWidth = r * 0.55f, cap = StrokeCap.Round
-    )
+    val sh = r * 0.2f
+    val bodyShape = Path().apply {
+        addRoundRect(
+            RoundRect(bodyLeft, bodyTop, bodyLeft + bodyW, bodyTop + bodyH, CornerRadius(r * 0.8f))
+        )
+    }
+    clipPath(bodyShape) {
+        var y = bodyTop + sh
+        while (y < bodyTop + bodyH) {
+            drawRect(stripe, Offset(bodyLeft, y), Size(bodyW, sh))
+            y += sh * 2f
+        }
+    }
+    // arms up, striped the same way
+    val dash = PathEffect.dashPathEffect(floatArrayOf(sh, sh), 0f)
+    listOf(-1f, 1f).forEach { side ->
+        val from = Offset(cx + side * r * 1.2f, headY + r * 1.8f)
+        val to = Offset(cx + side * r * 2.4f, headY - r * 0.9f)
+        drawLine(body, from, to, strokeWidth = r * 0.55f, cap = StrokeCap.Round)
+        drawLine(stripe, from, to, strokeWidth = r * 0.55f, cap = StrokeCap.Butt, pathEffect = dash)
+    }
     // head
     drawCircle(Color(0xFFE0B48F).copy(alpha = a), r, Offset(cx, headY))
     // beanie
