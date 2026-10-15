@@ -140,8 +140,8 @@ private fun Panel(content: @Composable ColumnScope.() -> Unit) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
             content = content
         )
     }
@@ -196,15 +196,15 @@ fun App() {
             .weight(1f)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         // header
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("🚪", fontSize = 26.sp)
+            Text("🚪", fontSize = 22.sp)
             Column {
-                Text("Port Knock", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("ناک کن تا در باز شود", fontSize = 12.sp, color = Muted)
+                Text("Port Knock", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("ناک کن تا در باز شود", fontSize = 11.sp, color = Muted)
             }
         }
 
@@ -314,7 +314,7 @@ fun App() {
                     modifier = Modifier.weight(1f)
                 )
             }
-            Text("اگر پورت تست خالی باشد، نتیجه با پینگ بررسی می‌شود.", fontSize = 12.sp, color = Muted)
+            Text("اگر پورت تست خالی باشد، نتیجه با پینگ بررسی می‌شود.", fontSize = 11.sp, color = Muted)
         }
 
         // door scene + result
@@ -324,11 +324,11 @@ fun App() {
                 step = step,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(112.dp)
             )
             Text(
                 status,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -336,6 +336,7 @@ fun App() {
             if (message.isNotEmpty()) {
                 Text(
                     message,
+                    fontSize = 13.sp,
                     color = if (phase == Phase.Success) Good else Bad,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -361,11 +362,11 @@ fun App() {
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .height(44.dp)
         ) {
             Text(
                 if (running) "در حال ناک…" else "ناک کن و نتیجه را بررسی کن",
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -515,26 +516,26 @@ private fun DonateFooter(onClick: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
             .background(PanelBg)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             "اگه برنامه رو دوست داشتی لطفا از من حمایت کن",
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             color = Muted,
             textAlign = TextAlign.Center
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(46.dp)
+                .height(40.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Brush.horizontalGradient(listOf(Color(0xFF2E9E4F), Color(0xFF5BCB74))))
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
-            Text("💚  حمایت می‌کنم", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("💚  حمایت می‌کنم", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
