@@ -11,6 +11,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,7 +60,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -125,13 +135,13 @@ private fun PortKnockTheme(content: @Composable () -> Unit) {
 @Composable
 private fun Panel(content: @Composable ColumnScope.() -> Unit) {
     Card(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = PanelBg),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content
         )
     }
@@ -159,6 +169,7 @@ fun App() {
     var message by remember { mutableStateOf("") }
     var editing by remember { mutableIntStateOf(-1) }
     var lastEditing by remember { mutableIntStateOf(0) }
+    var showDonate by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val ltr = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr)
     val running = phase == Phase.Running
@@ -179,25 +190,26 @@ fun App() {
         Phase.Fail -> "در بسته ماند ❌"
     }
 
+    Column(Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // header
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("🚪", fontSize = 34.sp)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("🚪", fontSize = 26.sp)
             Column {
-                Text("Port Knock", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text("Port Knock", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Text("ناک کن تا در باز شود", fontSize = 12.sp, color = Muted)
             }
         }
 
         // destination
         Panel {
-            SectionTitle("مقصد")
             OutlinedTextField(
                 value = host,
                 onValueChange = { host = it.trim() },
@@ -215,8 +227,8 @@ fun App() {
         Panel {
             SectionTitle("ناک‌ها")
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 knocks.forEachIndexed { i, k ->
                     val state = when {
@@ -242,12 +254,6 @@ fun App() {
 
             if (knocks.isEmpty()) {
                 Text("هنوز ناکی نداری؛ با + اضافه کن.", fontSize = 12.sp, color = Muted)
-            } else {
-                Text(
-                    "به ترتیب شماره اجرا می‌شوند. روی هر دایره بزن تا ویرایش شود.",
-                    fontSize = 12.sp,
-                    color = Muted
-                )
             }
 
             AnimatedVisibility(
@@ -284,7 +290,6 @@ fun App() {
 
         // test settings
         Panel {
-            SectionTitle("تنظیمات بررسی")
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = verify,
@@ -319,11 +324,11 @@ fun App() {
                 step = step,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
+                    .height(150.dp)
             )
             Text(
                 status,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -353,10 +358,10 @@ fun App() {
                 }
             },
             enabled = !running,
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(48.dp)
         ) {
             Text(
                 if (running) "در حال ناک…" else "ناک کن و نتیجه را بررسی کن",
@@ -365,6 +370,9 @@ fun App() {
             )
         }
     }
+    DonateFooter(onClick = { showDonate = true })
+    }
+    if (showDonate) DonateDialog(onDismiss = { showDonate = false })
 }
 
 @Composable
@@ -400,7 +408,7 @@ private fun KnockCircle(
     )
     Box(
         modifier = Modifier
-            .size(68.dp)
+            .size(56.dp)
             .scale(scale)
             .background(fill, CircleShape)
             .border(if (selected) 3.dp else 1.5.dp, borderColor, CircleShape)
@@ -409,10 +417,10 @@ private fun KnockCircle(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("${index + 1}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("${index + 1}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Text(
                 k.label(),
-                fontSize = 10.sp,
+                fontSize = 9.sp,
                 color = Muted,
                 maxLines = 1,
                 overflow = TextOverflow.Clip
@@ -425,13 +433,13 @@ private fun KnockCircle(
 private fun AddCircle(enabled: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(68.dp)
+            .size(56.dp)
             .border(1.5.dp, Accent, CircleShape)
             .clip(CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text("+", fontSize = 32.sp, color = Accent)
+        Text("+", fontSize = 28.sp, color = Accent)
     }
 }
 
@@ -451,7 +459,7 @@ private fun KnockEditor(
         colors = CardDefaults.cardColors(containerColor = InnerBg),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("ناک ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
                 TextButton(onClick = onMinimize) { Text("—", fontSize = 22.sp, color = Muted) }
@@ -497,5 +505,136 @@ private fun RowScope.ProtoButton(label: String, selected: Boolean, onClick: () -
         Button(onClick = onClick, modifier = Modifier.weight(1f)) { Text(label) }
     } else {
         OutlinedButton(onClick = onClick, modifier = Modifier.weight(1f)) { Text(label) }
+    }
+}
+
+@Composable
+private fun DonateFooter(onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+            .background(PanelBg)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            "اگه برنامه رو دوست داشتی لطفا از من حمایت کن",
+            fontSize = 13.sp,
+            color = Muted,
+            textAlign = TextAlign.Center
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(46.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Brush.horizontalGradient(listOf(Color(0xFF2E9E4F), Color(0xFF5BCB74))))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("💚  حمایت می‌کنم", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+    }
+}
+
+@Composable
+private fun DonateDialog(onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = PanelBg),
+                modifier = Modifier.fillMaxWidth(0.92f)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    DonateRow("شماره کارت", "5022 2915 3585 0471", "5022291535850471")
+                    DonateRow("شماره شبا", "IR920570077700004239684001", "IR920570077700004239684001")
+                    Text(
+                        "هادی صدقی",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DonateRow(label: String, value: String, copyValue: String) {
+    val clipboard = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1500)
+            copied = false
+        }
+    }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // title: right-aligned
+        Text(
+            label,
+            fontSize = 13.sp,
+            color = Muted,
+            textAlign = TextAlign.Right,
+            modifier = Modifier.fillMaxWidth()
+        )
+        // number: starts from the left, copy icon right next to it
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    value,
+                    style = LocalTextStyle.current.copy(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        textDirection = TextDirection.Ltr,
+                        textAlign = TextAlign.Left
+                    ),
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(CircleBg)
+                        .clickable {
+                            clipboard.setText(AnnotatedString(copyValue))
+                            copied = true
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (copied) {
+                        Text("✓", fontSize = 18.sp, color = Good, fontWeight = FontWeight.Bold)
+                    } else {
+                        CopyIcon(Accent)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CopyIcon(tint: Color) {
+    Canvas(Modifier.size(20.dp)) {
+        val s = size.width
+        val stroke = Stroke(width = s * 0.1f)
+        val r = CornerRadius(s * 0.12f)
+        // back sheet
+        drawRoundRect(tint, Offset(s * 0.30f, s * 0.06f), Size(s * 0.60f, s * 0.64f), r, style = stroke)
+        // front sheet
+        drawRoundRect(CircleBg, Offset(s * 0.10f, s * 0.28f), Size(s * 0.60f, s * 0.66f), r)
+        drawRoundRect(tint, Offset(s * 0.10f, s * 0.28f), Size(s * 0.60f, s * 0.66f), r, style = stroke)
     }
 }
