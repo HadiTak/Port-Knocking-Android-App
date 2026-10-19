@@ -1,0 +1,55 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch signing key from private repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/android-keys
+          token: ${{ secrets.KEYS_REPO_TOKEN }}
+          path: keys
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Accept Android licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/keys/haditak.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYS_PASSWORD }}
+          KEY_ALIAS: haditak
+          KEY_PASSWORD: ${{ secrets.KEYS_PASSWORD }}
+        run: |
+          export VERSION_NAME="${GITHUB_REF_NAME#v}"
+          export VERSION_CODE="${{ github.run_number }}"
+          gradle assembleRelease --no-daemon
+
+      - name: Rename APK
+        run: mv app/build/outputs/apk/release/app-release.apk "${{ github.event.repository.name }}-${GITHUB_REF_NAME}.apk"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.event.repository.name }}-${{ github.ref_name }}.apk
+          generate_release_notes: true
